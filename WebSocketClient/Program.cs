@@ -1,91 +1,104 @@
 ﻿using System;
 using WebSocketSharp;
 using Newtonsoft.Json;
-using System.IO;
 using System.Threading;
-using System.Diagnostics;
 
 namespace WebSocketClient
 {
     class Program
     {
-        static Parameters ServerParameters = null;
+        static Parameters _Parameters = null;
+        static Logger _Logger = new Logger();
 
-        static bool NeedRestart = true;
-        static DateTime LastDateTimeSendMsg;
-        static Timer TimerCheckEvents = new Timer(TimerCallback, null, 0, 10000);
+        static bool _NeedRestart = true;
+        static DateTime _LastDateTimeSendMsg;
+
+        static Timer _TimerCheckEvents;
+        static int _TimerPeriod = 10000;
 
         static void Main(string[] args)
         {
             if (!LoadServerParameters())
                 return;
 
-            LastDateTimeSendMsg = DateTime.Now;
+            _TimerCheckEvents = new Timer(TimerCallback, null, 0, _TimerPeriod);
+
+            _LastDateTimeSendMsg = DateTime.Now;
 
             ConsoleKeyInfo keyinfo;
+
             do
             {
                 keyinfo = Console.ReadKey();
                 Console.Clear();
-                Console.WriteLine("Для завершения программы, нажми X");
+                Console.WriteLine("For exit, press X");
             }
             while (keyinfo.Key != ConsoleKey.X);
 
         }
 
         /// <summary>
-        /// Загрузка параметров из конфиг файла
+        /// Load parameters
         /// </summary>
         /// <returns></returns>
         static bool LoadServerParameters()
         {
-            ServerParameters = new Settings().LoadParams();
-            return ServerParameters != null;
+            _Parameters = new Settings().LoadParams();
+            return _Parameters != null;
         }
 
-        private static void TimerCallback(Object o)
+        /// <summary>
+        /// Init Callback Timer
+        /// </summary>
+        /// <param name="o"></param>
+        static void TimerCallback(Object o)
         {
             DateTime d = DateTime.Now;
 
-            if (d.Hour == 0 && !NeedRestart)
+            if (d.Hour == 0 && !_NeedRestart)
             {
-                NeedRestart = true;
-                Console.WriteLine(d.ToString() + " Флаг перезагрузки сброшен");
+                _NeedRestart = true;
+                _Logger.AddLog($"Variables updated");
             }
-            else if (d.Hour == 5 && NeedRestart)
+            else if (d.Hour == 5 && _NeedRestart)
             {
-                Console.WriteLine(d.ToString() + " Время перезагрузить сервер");
-                sendCMD("restart");
+                _Logger.AddLog($"Try send command - restart");
+                SendRconCmd("restart");
             }
 
             //выводим сообщение о группе
-            TimeSpan span = DateTime.Now.Subtract(LastDateTimeSendMsg);
-            //Console.WriteLine(span.Seconds);
-            //if (span.Minutes >= 30)
-             if (span.Hours >= 1)
-             {
-                LastDateTimeSendMsg = DateTime.Now;
-                string cmd = "say Друзья! Вступайте в группу ВК(vk.com/rust_manhunt),там все новости по расту и серверу. Приятной игры!";
-                sendCMD(cmd);
+            TimeSpan span = DateTime.Now.Subtract(_LastDateTimeSendMsg);
+                if (span.Hours >= 1)
+                {
+                _LastDateTimeSendMsg = DateTime.Now;
+
+                string sayMsgs = "";
+                foreach (var _msg in _Parameters.LisgMsgs)
+                {
+                    if (sayMsgs != "") sayMsgs += "<br>";
+                    sayMsgs += $"{_msg}";
+                }
+
+                SendRconCmd($"say {sayMsgs}");
             }
 
         }
 
-        static void sendCMD(string cmd)
+        /// <summary>
+        /// Send RCON command
+        /// </summary>
+        /// <param name="cmd"></param>
+        static void SendRconCmd(string cmd)
         {
-            string wsAddress = string.Format("ws://{0}:{1}/{2}", ServerParameters.ip, ServerParameters.port, ServerParameters.password);
-
-            using (var ws = new WebSocket(wsAddress))
+            using (var ws = new WebSocket(_Parameters.WSAddress))
             {
                 ws.OnMessage += (sender, e) =>
                 {
-                    Console.WriteLine("RCON says: " + e.Data.ToString());
-                    AddLog("Пришел ответ: " + e.Data.ToString());
+                    _Logger.AddLog($"RCON RESPONSE:\n{e.Data}");
                 };
 
                 ws.OnError += (sender, e) => {
-                    Console.WriteLine("RCON error: " + e.Message);
-                    AddLog("Ошибка: " + e.Message);
+                    _Logger.AddLog($"RCON ERROR:\n{e.Message}");
                 };
 
                 ws.Connect();
@@ -98,40 +111,16 @@ namespace WebSocketClient
                 string s = JsonConvert.SerializeObject(m);
 
                 ws.Send(s);
-                Console.WriteLine(DateTime.Now.ToString() + " отправил команду " + cmd + " через RCON");
-                AddLog("Пора перезагрузить сервачек, отправил команду " + cmd + " через RCON");
+
+                _Logger.AddLog($"SEND CMD: {cmd}");
 
                 Thread.Sleep(500);
 
                 ws.Close();
             }
 
-            NeedRestart = false;
+            _NeedRestart = false;
         }
 
-        static void AddLog(string msg)
-        {
-            File.AppendAllText("log.txt",
-                   DateTime.Now.ToString() +"   " + msg + Environment.NewLine);
-        }
-
-        static void CheckStartUpServer()
-        {
-            bool flStartApp = false;
-            string name = "RustDedicated.exe";
-            Process[] pr2 = Process.GetProcesses();
-            for (int i = 0; i < pr2.Length; i++)
-            {
-                if (pr2[i].ProcessName == name)
-                {
-                    flStartApp = true;
-                    break;
-                }
-            }
-            if (!flStartApp)
-            {
-
-            }
-        }
     }
 }

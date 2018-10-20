@@ -2,8 +2,8 @@
 {
     class RCONMessage
     {
-        public int Identifier;
-        public string Message;
-        public string Name;
+        public int Identifier { get; set; }
+        public string Message { get; set; }
+        public string Name { get; set; }
     }
 }

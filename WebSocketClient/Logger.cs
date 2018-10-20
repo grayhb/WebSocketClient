@@ -5,21 +5,21 @@ namespace WebSocketClient
 {
     public class Logger
     {
-        string _LogFileName { get; set; }
-        int _MaxLineLog { get; set; }
-        bool _WriteConsole { get; set; }
+        string LogFileName { get; set; }
+        int MaxLineLog { get; set; }
+        bool WriteConsole { get; set; }
 
         /// <summary>
         /// Init logger
         /// </summary>
-        /// <param name="LogFileName">File name</param>
-        /// <param name="MaxLineLog">Maximum line</param>
-        /// <param name="WriteConsole">Send msg in console</param>
-        public Logger(string LogFileName = "log.txt", int MaxLineLog = 1000, bool WriteConsole = true)
+        /// <param name="logFileName">File name</param>
+        /// <param name="maxLineLog">Maximum line</param>
+        /// <param name="writeConsole">Send msg in console</param>
+        public Logger(string logFileName = "log.txt", int maxLineLog = 1000, bool writeConsole = true)
         {
-            _LogFileName = LogFileName;
-            _MaxLineLog = MaxLineLog;
-            _WriteConsole = WriteConsole;
+            this.LogFileName = logFileName;
+            this.MaxLineLog = maxLineLog;
+            this.WriteConsole = writeConsole;
         }
 
         /// <summary>
@@ -32,9 +32,9 @@ namespace WebSocketClient
             {
                 CheckMaxLine();
 
-                File.AppendAllText(_LogFileName, $"{DateTime.Now} {msg}{Environment.NewLine}");
+                File.AppendAllText(LogFileName, $"{DateTime.Now} {msg}{Environment.NewLine}");
 
-                if (_WriteConsole)
+                if (WriteConsole)
                     Console.WriteLine($"{DateTime.Now} {msg}");
             }
             catch(Exception ex)
@@ -50,9 +50,9 @@ namespace WebSocketClient
         {
             try
             {
-                string[] AllLineLog = File.ReadAllLines(_LogFileName);
-                if (AllLineLog.Length > _MaxLineLog)
-                    File.WriteAllText(_LogFileName, "");
+                string[] AllLineLog = File.ReadAllLines(LogFileName);
+                if (AllLineLog.Length > MaxLineLog)
+                    File.WriteAllText(LogFileName, "");
             }
             catch (Exception ex)
             {

@@ -7,23 +7,23 @@ namespace WebSocketClient
 {
     class Program
     {
-        static Parameters _Parameters = null;
-        static Logger _Logger = new Logger();
+        static Parameters _parameters = null;
+        static Logger logger = new Logger();
 
-        static bool _NeedRestart = true;
-        static DateTime _LastDateTimeSendMsg;
+        static bool NeedRestart = true;
+        static DateTime LastDateTimeSendMsg;
 
-        static Timer _TimerCheckEvents;
-        static int _TimerPeriod = 10000;
+        static Timer TimerCheckEvents;
+        static int TimerPeriod = 10000;
 
         static void Main(string[] args)
         {
             if (!LoadServerParameters())
                 return;
 
-            _TimerCheckEvents = new Timer(TimerCallback, null, 0, _TimerPeriod);
+            TimerCheckEvents = new Timer(TimerCallback, null, 0, TimerPeriod);
 
-            _LastDateTimeSendMsg = DateTime.Now;
+            LastDateTimeSendMsg = DateTime.Now;
 
             ConsoleKeyInfo keyinfo;
 
@@ -43,8 +43,8 @@ namespace WebSocketClient
         /// <returns></returns>
         static bool LoadServerParameters()
         {
-            _Parameters = new Settings().LoadParams();
-            return _Parameters != null;
+            _parameters = new Settings().LoadParams();
+            return _parameters != null;
         }
 
         /// <summary>
@@ -55,25 +55,26 @@ namespace WebSocketClient
         {
             DateTime d = DateTime.Now;
 
-            if (d.Hour == 0 && !_NeedRestart)
+            if (d.Hour == 0 && !NeedRestart)
             {
-                _NeedRestart = true;
-                _Logger.AddLog($"Variables updated");
+                NeedRestart = true;
+                logger.AddLog($"Variables updated");
             }
-            else if (d.Hour == 5 && _NeedRestart)
+            else if (d.Hour == 5 && NeedRestart)
             {
-                _Logger.AddLog($"Try send command - restart");
+                logger.AddLog($"Try send command - restart");
                 SendRconCmd("restart");
+                NeedRestart = false;
             }
 
             //выводим сообщение о группе
-            TimeSpan span = DateTime.Now.Subtract(_LastDateTimeSendMsg);
+            TimeSpan span = DateTime.Now.Subtract(LastDateTimeSendMsg);
                 if (span.Hours >= 1)
                 {
-                _LastDateTimeSendMsg = DateTime.Now;
+                LastDateTimeSendMsg = DateTime.Now;
 
                 string sayMsgs = "";
-                foreach (var _msg in _Parameters.LisgMsgs)
+                foreach (var _msg in _parameters.LisgMsgs)
                 {
                     if (sayMsgs != "") sayMsgs += "<br>";
                     sayMsgs += $"{_msg}";
@@ -81,7 +82,6 @@ namespace WebSocketClient
 
                 SendRconCmd($"say {sayMsgs}");
             }
-
         }
 
         /// <summary>
@@ -90,15 +90,15 @@ namespace WebSocketClient
         /// <param name="cmd"></param>
         static void SendRconCmd(string cmd)
         {
-            using (var ws = new WebSocket(_Parameters.WSAddress))
+            using (var ws = new WebSocket(_parameters.WSAddress))
             {
                 ws.OnMessage += (sender, e) =>
                 {
-                    _Logger.AddLog($"RCON RESPONSE:\n{e.Data}");
+                    logger.AddLog($"RCON RESPONSE:\n{e.Data}");
                 };
 
                 ws.OnError += (sender, e) => {
-                    _Logger.AddLog($"RCON ERROR:\n{e.Message}");
+                    logger.AddLog($"RCON ERROR:\n{e.Message}");
                 };
 
                 ws.Connect();
@@ -112,14 +112,12 @@ namespace WebSocketClient
 
                 ws.Send(s);
 
-                _Logger.AddLog($"SEND CMD: {cmd}");
+                logger.AddLog($"SEND CMD: {cmd}");
 
                 Thread.Sleep(500);
 
                 ws.Close();
             }
-
-            _NeedRestart = false;
         }
 
     }

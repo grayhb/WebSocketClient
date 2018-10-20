@@ -4,13 +4,13 @@ namespace WebSocketClient
 {
     public class Parameters
     {
-        string _Ip;
-        string _Port;
-        string _Password;
+        string ip;
+        string port;
+        string password;
 
-        public string Ip { get { return _Ip; } set { _Ip = value; WSAddress = $"ws://{value}"; } }
-        public string Port { get { return _Port; } set { _Port = value; WSAddress += $":{value}"; } }
-        public string Password { get { return _Password; } set { _Password = value; WSAddress +=$"/{value}"; } }
+        public string Ip { get { return ip; } set { ip = value; WSAddress = $"ws://{value}"; } }
+        public string Port { get { return port; } set { port = value; WSAddress += $":{value}"; } }
+        public string Password { get { return password; } set { password = value; WSAddress +=$"/{value}"; } }
 
         public string WSAddress { get; set; }
 

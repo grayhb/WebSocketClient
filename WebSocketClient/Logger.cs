@@ -12,14 +12,14 @@ namespace WebSocketClient
         /// <summary>
         /// Init logger
         /// </summary>
-        /// <param name="logFileName">File name</param>
-        /// <param name="maxLineLog">Maximum line</param>
-        /// <param name="writeConsole">Send msg in console</param>
-        public Logger(string logFileName = "log.txt", int maxLineLog = 1000, bool writeConsole = true)
+        /// <param name="LogFileName">File name</param>
+        /// <param name="MaxLineLog">Maximum line</param>
+        /// <param name="WriteConsole">Send msg in console</param>
+        public Logger(string LogFileName = "log.txt", int MaxLineLog = 1000, bool WriteConsole = true)
         {
-            this.LogFileName = logFileName;
-            this.MaxLineLog = maxLineLog;
-            this.WriteConsole = writeConsole;
+            this.LogFileName = LogFileName;
+            this.MaxLineLog = MaxLineLog;
+            this.WriteConsole = WriteConsole;
         }
 
         /// <summary>

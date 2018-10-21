@@ -7,7 +7,7 @@ namespace WebSocketClient
 {
     class Program
     {
-        static Parameters _parameters = null;
+        static Parameters parameters = null;
         static Logger logger = new Logger();
 
         static bool NeedRestart = true;
@@ -43,8 +43,8 @@ namespace WebSocketClient
         /// <returns></returns>
         static bool LoadServerParameters()
         {
-            _parameters = new Settings().LoadParams();
-            return _parameters != null;
+            parameters = new Settings().LoadParams();
+            return parameters != null;
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace WebSocketClient
                 LastDateTimeSendMsg = DateTime.Now;
 
                 string sayMsgs = "";
-                foreach (var _msg in _parameters.LisgMsgs)
+                foreach (var _msg in parameters.LisgMsgs)
                 {
                     if (sayMsgs != "") sayMsgs += "<br>";
                     sayMsgs += $"{_msg}";
@@ -90,7 +90,7 @@ namespace WebSocketClient
         /// <param name="cmd"></param>
         static void SendRconCmd(string cmd)
         {
-            using (var ws = new WebSocket(_parameters.WSAddress))
+            using (var ws = new WebSocket(parameters.WSAddress))
             {
                 ws.OnMessage += (sender, e) =>
                 {

@@ -16,8 +16,10 @@ namespace WebSocketClient
         {
             if (ExistConfigFile())
             {
-                Parameters serverParams = new Parameters();
-                serverParams.LisgMsgs = new List<string>();
+                Parameters serverParams = new Parameters
+                {
+                    LisgMsgs = new List<string>()
+                };
 
                 using (StreamReader reader = new StreamReader(configFileName))
                 {

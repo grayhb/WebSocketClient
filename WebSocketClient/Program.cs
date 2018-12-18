@@ -7,14 +7,13 @@ namespace WebSocketClient
 {
     class Program
     {
-        static Parameters parameters = null;
-        static Logger logger = new Logger();
+        private static Parameters parameters = null;
+        private static Logger logger = new Logger();
+        private static bool NeedRestart = true;
+        private static DateTime LastDateTimeSendMsg;
 
-        static bool NeedRestart = true;
-        static DateTime LastDateTimeSendMsg;
-
-        static Timer TimerCheckEvents;
-        static int TimerPeriod = 10000;
+        private static Timer TimerCheckEvents;
+        private static readonly int TimerPeriod = 10000;
 
         static void Main(string[] args)
         {
@@ -29,7 +28,19 @@ namespace WebSocketClient
 
             do
             {
+                Console.WriteLine("For exit, press X");
+                Console.WriteLine("For test send messages and command, press T");
+
                 keyinfo = Console.ReadKey();
+
+                if (keyinfo.Key == ConsoleKey.T)
+                {
+                    Console.WriteLine("Try test rcon command:");
+                    SendMessage();
+                    SendCommand();
+                    keyinfo = Console.ReadKey();
+                }
+
                 Console.Clear();
                 Console.WriteLine("For exit, press X");
             }
@@ -41,7 +52,7 @@ namespace WebSocketClient
         /// Load parameters
         /// </summary>
         /// <returns></returns>
-        static bool LoadServerParameters()
+        private static bool LoadServerParameters()
         {
             parameters = new Settings().LoadParams();
             return parameters != null;
@@ -51,7 +62,7 @@ namespace WebSocketClient
         /// Init Callback Timer
         /// </summary>
         /// <param name="o"></param>
-        static void TimerCallback(Object o)
+        private static void TimerCallback(Object o)
         {
             DateTime d = DateTime.Now;
 
@@ -69,18 +80,39 @@ namespace WebSocketClient
 
             //выводим сообщение о группе
             TimeSpan span = DateTime.Now.Subtract(LastDateTimeSendMsg);
-                if (span.Hours >= 1)
-                {
-                LastDateTimeSendMsg = DateTime.Now;
+            if (span.Hours >= 1)
+            {
+                SendMessage();
 
-                string sayMsgs = "";
-                foreach (var _msg in parameters.LisgMsgs)
-                {
-                    if (sayMsgs != "") sayMsgs += "<br>";
-                    sayMsgs += $"{_msg}";
-                }
+                SendCommand();
+            }
+        }
 
-                SendRconCmd($"say {sayMsgs}");
+        /// <summary>
+        /// Send Message 
+        /// </summary>
+        private static void SendMessage()
+        {
+            LastDateTimeSendMsg = DateTime.Now;
+
+            string sayMsgs = "";
+            foreach (var msg in parameters.ListMsgs)
+            {
+                if (sayMsgs != "") sayMsgs += "<br>";
+                sayMsgs += $"{msg}";
+            }
+
+            SendRconCmd($"say {sayMsgs}");
+        }
+
+        /// <summary>
+        /// Send Command
+        /// </summary>
+        private static void SendCommand()
+        {
+            foreach (var cmd in parameters.ListCommands)
+            {
+                SendRconCmd(cmd);
             }
         }
 
@@ -88,7 +120,7 @@ namespace WebSocketClient
         /// Send RCON command
         /// </summary>
         /// <param name="cmd"></param>
-        static void SendRconCmd(string cmd)
+        private static void SendRconCmd(string cmd)
         {
             using (var ws = new WebSocket(parameters.WSAddress))
             {
@@ -103,10 +135,12 @@ namespace WebSocketClient
 
                 ws.Connect();
 
-                RCONMessage m = new RCONMessage();
-                m.Identifier = -1;
-                m.Name = "WebRcon";
-                m.Message = cmd;
+                RCONMessage m = new RCONMessage
+                {
+                    Identifier = -1,
+                    Name = "WebRcon",
+                    Message = cmd
+                };
 
                 string s = JsonConvert.SerializeObject(m);
 

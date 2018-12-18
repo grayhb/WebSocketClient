@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace WebSocketClient
 {
-    class Settings
+    public class Settings
     {
         const string configFileName = "config.ini";
 
@@ -18,7 +18,8 @@ namespace WebSocketClient
             {
                 Parameters serverParams = new Parameters
                 {
-                    LisgMsgs = new List<string>()
+                    ListMsgs = new List<string>(),
+                    ListCommands = new List<string>()
                 };
 
                 using (StreamReader reader = new StreamReader(configFileName))
@@ -39,7 +40,10 @@ namespace WebSocketClient
                                 serverParams.Password = param[1].Trim();
                                 break;
                             case "saymsg":
-                                serverParams.LisgMsgs.Add(param[1].Trim());
+                                serverParams.ListMsgs.Add(param[1].Trim());
+                                break;
+                            case "command":
+                                serverParams.ListCommands.Add(param[1].Trim());
                                 break;
                         }
                     }

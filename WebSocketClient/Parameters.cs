@@ -14,6 +14,7 @@ namespace WebSocketClient
 
         public string WSAddress { get; set; }
 
-        public List<string> LisgMsgs { get; set; }
+        public List<string> ListMsgs { get; set; }
+        public List<string> ListCommands { get; set; }
     }
 }
